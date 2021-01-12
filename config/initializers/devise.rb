@@ -1,5 +1,19 @@
 # frozen_string_literal: true
 
+class TurboFailureApp < Devise::FailureApp
+  def respond
+    if request_format == :turbo_stream
+      redirect
+    else
+      super
+    end
+  end
+
+  def skip_format?
+    %w(html turbo_stream */*).include? request_format.to_s
+  end
+end
+
 # Assuming you have not yet modified this file, each configuration option below
 # is set to its default value. Note that some are commented out while others
 # are not: uncommented lines are intended to protect your configuration from
@@ -18,7 +32,7 @@ Devise.setup do |config|
 
   # ==> Controller configuration
   # Configure the parent class to the devise controllers.
-  # config.parent_controller = 'DeviseController'
+  config.parent_controller = 'Users::DeviseController'
 
   # ==> Mailer Configuration
   # Configure the e-mail address which will be shown in Devise::Mailer,
@@ -126,7 +140,7 @@ Devise.setup do |config|
   config.stretches = Rails.env.test? ? 1 : 12
 
   # Set up a pepper to generate the hashed password.
-  # config.pepper = 'a45951368310e8a77fc5046e7ab4ab8315a1387a52a4b096493bddad18398a3f11fd0073205ad84ee786bf83c34851f8db92cd38f61225b5c47a9a629e7948f9'
+  # config.pepper = '2a25d1f4116b51e0756a330a7f9a08787d8dddd6da9dbd82d3cc8cf45f7b67bd884a58e2ded3bf636abde3258d2497a3fd4111078b8226a7c79228a378a12bc2'
 
   # Send a notification to the original email when the user's email is changed.
   # config.send_email_changed_notification = false
@@ -263,7 +277,7 @@ Devise.setup do |config|
   # should add them to the navigational formats lists.
   #
   # The "*/*" below is required to match Internet Explorer requests.
-  # config.navigational_formats = ['*/*', :html]
+  config.navigational_formats = ['*/*', :html, :turbo_stream]
 
   # The default HTTP method used to sign out a resource. Default is :delete.
   config.sign_out_via = :delete
@@ -284,10 +298,11 @@ Devise.setup do |config|
   # If you want to use other strategies, that are not supported by Devise, or
   # change the failure app, you can configure them inside the config.warden block.
   #
-  # config.warden do |manager|
+  config.warden do |manager|
+    manager.failure_app = TurboFailureApp
   #   manager.intercept_401 = false
   #   manager.default_strategies(scope: :user).unshift :some_external_strategy
-  # end
+  end
 
   # ==> Mountable engine configurations
   # When using Devise inside an engine, let's call it `MyEngine`, and this engine
